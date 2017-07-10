@@ -7,51 +7,49 @@
  */
 
 // MySQL服务器
-define("SAE_MYSQL_HOST_M", "rdbeacon.database.chinacloudapi.cn");
-define("SAE_MYSQL_USER", "yangyl");
+define("SAE_MYSQL_HOST_M", "beacon.mysqldb.chinacloudapi.cn");
+define("SAE_MYSQL_USER", "beacon%yangyl");
 define("SAE_MYSQL_PASS", "Passw0rd");
-define("SAE_MYSQL_DB", "rdbeacondb");
+define("SAE_MYSQL_DB", "beacondb");
 
-// 连接到数据库
-function openConnection()
-{
-    $connectionOptions = array(
-        'Database' => SAE_MYSQL_DB,
-        'Uid' => SAE_MYSQL_USER,
-        'PWD' => SAE_MYSQL_PASS,
-        'CharacterSet' => 'UTF-8'
-    );
-    return sqlsrv_connect("tcp:" . SAE_MYSQL_HOST_M . ",1433", $connectionOptions);
-}
+//打开非持久的 MySQL 连接
+$conn = @mysql_connect(SAE_MYSQL_HOST_M . ':' . SAE_MYSQL_PORT, SAE_MYSQL_USER, SAE_MYSQL_PASS) or die("Could not connect:" . mysql_error());
+
+// 设置活动的 MySQL 数据库
+mysql_select_db(SAE_MYSQL_DB, $conn);
+
 
 // 关闭连接
 function closeConnection($conn)
 {
+    // mysql数据库
+    mysql_close($conn);
 
     // sqldatabase
-    sqlsrv_close($conn);
+    //    sqlsrv_close($conn);
 }
 
-// 执行查询处理
+// 连接到数据库
 function query_sql($sql, $conn, &$code, &$errors)
 {
-    $result = sqlsrv_query($sql, $conn);
+    $result = mysql_query($sql, $conn);
+//    $result = sqlsrv_query($conn, $sql);
 
     if (!$result) {
         $code = '501';
 
-        $errors = sqlsrv_errors();
+        $errors = mysql_error();
+        //  $errors = sqlsrv_errors();
     }
     return $result;
 }
 
 // 从结果集中取得一行作为关联数组，或数字数组，或二者兼有
-function fetch_single_row($result)
+function fetch_single_row($result, $result_type = MYSQL_BOTH)
 {
-    return sqlsrv_fetch_array($result);
-}
-
-$conn = openConnection();
-if (!$conn) {
-    die("Could not connect:" . sqlsrv_errors());
+    if ($result_type != null) {
+        return mysql_fetch_array($result, $result_type);
+    } else {
+        return mysql_fetch_row($result);
+    }
 }
